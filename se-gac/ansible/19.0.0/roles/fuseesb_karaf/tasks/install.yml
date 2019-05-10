@@ -1,0 +1,37 @@
+---
+# bundles
+- name: "Get link vcur"
+  stat:
+    path: "{{ install_link_path }}"
+  register: link_vcur
+
+- name: "Get previous installed version"
+  set_fact:
+    previous_version: "{{ link_vcur.stat.lnk_source | basename }}"
+
+- name: "Create bundle vars"
+  set_fact:
+    previous_bundles: "{{ previous_bundles | default([]) }} + [ \"{{item}}/{{previous_version}}\" ]"
+    new_bundles: "{{ new_bundles | default([]) }} + [ \"{{item}}/{{version}}\" ]"
+    urls: "{{ urls | default([]) }} + [ \"file:{{bundle_directory}}/{{item}}/features/features.xml\" ]"
+  with_items: "{{bundles}}"
+
+- name: "Uninstall bundles"
+  shell: "{{fuse_client}} -a {{fuse_port}} -u {{fuse_user}} -p {{fuse_password}} \"features:uninstall {{previous_bundles | join(' ')}}\""
+
+- name: "Setup link to current version"
+  file:
+    path: "{{install_link_path}}"
+    src: "{{install_link_src}}"
+    state: link
+
+- name: "Refresh URL"
+  shell: "{{fuse_client}} -a {{fuse_port}} -u {{fuse_user}} -p {{fuse_password}} \"features:refreshurl {{urls | join(' ')}}\""
+  register: refresh_result
+  failed_when: "refresh_result.rc != 0 or 'Error executing command' in refresh_result.stdout"
+
+- name: "Install bundles"
+  shell: "{{fuse_client}} -a {{fuse_port}} -u {{fuse_user}} -p {{fuse_password}} \"features:install {{new_bundles | join(' ')}}\""
+  register: install_result
+  failed_when: "install_result.rc != 0 or 'Error executing command' in install_result.stdout"
+

@@ -1,0 +1,11 @@
+---
+work_directory: "~/work"
+
+# download task
+download_base_file: "segac-base-{{version}}.zip"
+download_base_url: "{{nexus_application_repository}}/fr/rsi/se/distribution/segac-base/{{version}}/{{download_base_file}}"
+download_base_qi_file: "segac-base-qi-{{version}}.zip"
+download_base_qi_url: "{{nexus_qualification_repository}}/fr/rsi/se/distribution/segac-base-qi/{{version}}/{{download_base_qi_file}}"
+
+# deploy task
+deploy_dest_directory: "~/v{{version | replace('.','') | replace('-','')}}"

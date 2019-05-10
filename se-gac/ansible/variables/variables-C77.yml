@@ -1,0 +1,17 @@
+---
+env: "C77"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC77
+profile_p_bdu: SE_BDUQFC77
+profile_p_cfe: SE_CFEQFC77
+profile_p_gac: SE_GACQFC77
+profile_p_scr: SE_SCRQFC77
+profile_p_taiga: SE_TAIGAQFC77
+profile_trace: SE_SOC_TRAQFC77
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec77/etc"
+fuse_port: "8109"
+fuse_user: "sec77"
+fuse_password: "*******"

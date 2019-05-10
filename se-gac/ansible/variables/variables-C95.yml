@@ -1,0 +1,17 @@
+---
+env: "C95"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC95
+profile_p_bdu: SE_BDUQFC95
+profile_p_cfe: SE_CFEQFC95
+profile_p_gac: SE_GACQFC95
+profile_p_scr: SE_SCRQFC95
+profile_p_taiga: SE_TAIGAQFC95
+profile_trace: SE_SOC_TRAQFC95
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec95/etc"
+fuse_port: "8112"
+fuse_user: "sec95"
+fuse_password: "*******"

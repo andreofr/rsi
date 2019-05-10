@@ -1,0 +1,6 @@
+---
+work_directory: "~/work"
+
+# install task
+install_link_path: "~/vcur"
+install_link_src: "/se/logiciel/v{{version | replace('.','') | replace('-','')}}"

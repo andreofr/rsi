@@ -1,0 +1,25 @@
+---
+- name: "Create working directory : {{work_directory}}"
+  file:
+    path: "{{work_directory}}"
+    state: directory
+
+# bundles et features
+- name: "Get files from Nexus"
+  get_url:
+    url: "{{download_bundle_url}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"
+  vars:
+    bundle: "{{item}}"
+  with_items:
+    - "{{bundles}}"
+
+# features
+- name: "Get files from Nexus"
+  get_url:
+    url: "{{download_features_url}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"

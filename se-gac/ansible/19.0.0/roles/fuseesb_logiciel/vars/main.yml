@@ -1,0 +1,23 @@
+---
+work_directory: "~/work"
+
+bundles:
+  - { name: "demande-cfe", dest_dir: "F_CFE_BEN" }
+  - { name: "insertion-beneficiaire", dest_dir: "F_INS_BEN" }
+  - { name: "modification-beneficiaire", dest_dir: "F_MOD_BEN" }
+  - { name: "radiation-beneficiaire", dest_dir: "F_RAD_BEN" }
+  - { name: "recherche-beneficiaire", dest_dir: "F_REC_BEN" }
+  - { name: "reprise-beneficiaire", dest_dir: "F_REP_BEN" }
+  - { name: "module-routage", dest_dir: "SOCLE_COM" }
+  - { name: "socle-commun", dest_dir: "SOCLE_COM" }
+  - { name: "connecteur-cnam", dest_dir: "C_CNAM" }
+
+# download task
+download_bundle_file: "{{bundle.name}}-{{version}}.jar"
+download_bundle_url: "{{nexus_application_repository}}/fr/rsi/se/distribution/{{bundle.name}}/{{version}}/{{download_bundle_file}}"
+download_features_file: "segac-config-{{env}}-{{version}}-features.zip"
+download_features_url: "{{nexus_valorisation_repository}}/fr/rsi/se/distribution/segac-config-{{env}}/{{version}}/{{download_features_file}}"
+
+# deploy task
+deploy_bundle_file: "{{bundle.name}}.jar"
+deploy_dest_directory: "/se/logiciel/{{version}}"

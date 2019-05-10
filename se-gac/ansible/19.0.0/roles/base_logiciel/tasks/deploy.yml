@@ -1,0 +1,29 @@
+---
+# base
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Unzip files"
+  unarchive:
+    src: "{{work_directory}}/{{download_base_file}}"
+    dest: "{{deploy_dest_directory}}"
+    remote_src: yes
+  with_items:
+    - "{{download_base_file}}"
+    - "{{download_base_qi_file}}"
+
+- name: "Set files executable : {{deploy_dest_directory}}/exe"
+  file:
+    path: "{{deploy_dest_directory}}/exe"
+    mode: 0755
+    recurse: yes
+
+- name: "Remove files"
+  file:
+    path: "{{work_directory}}/{{item}}"
+    state: absent
+  with_items:
+    - "{{download_base_file}}"
+    - "{{download_base_qi_file}}"

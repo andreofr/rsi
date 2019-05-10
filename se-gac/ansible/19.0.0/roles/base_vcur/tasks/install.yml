@@ -1,0 +1,7 @@
+---
+# base
+- name: "Setup link to current version : {{install_link_src}}"
+  file: 
+    path: "{{install_link_path}}"
+    src: "{{install_link_src}}"
+    state: link

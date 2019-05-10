@@ -1,0 +1,17 @@
+---
+env: "C36"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC36
+profile_p_bdu: SE_BDUQFC36
+profile_p_cfe: SE_CFEQFC36
+profile_p_gac: SE_GACQFC36
+profile_p_scr: SE_SCRQFC36
+profile_p_taiga: SE_TAIGAQFC36
+profile_trace: SE_SOC_TRAQFC36
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec36/etc"
+fuse_port: "8107"
+fuse_user: "sec36"
+fuse_password: "*******"

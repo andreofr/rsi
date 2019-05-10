@@ -1,0 +1,17 @@
+---
+env: "C86"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC86
+profile_p_bdu: SE_BDUQFC86
+profile_p_cfe: SE_CFEQFC86
+profile_p_gac: SE_GACQFC86
+profile_p_scr: SE_SCRQFC86
+profile_p_taiga: SE_TAIGAQFC86
+profile_trace: SE_SOC_TRAQFC86
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec86/etc"
+fuse_port: "8119"
+fuse_user: "sec86"
+fuse_password: "*******"

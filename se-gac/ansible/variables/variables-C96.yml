@@ -1,0 +1,17 @@
+---
+env: "C96"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC96
+profile_p_bdu: SE_BDUQFC96
+profile_p_cfe: SE_CFEQFC96
+profile_p_gac: SE_GACQFC96
+profile_p_scr: SE_SCRQFC96
+profile_p_taiga: SE_TAIGAQFC96
+profile_trace: SE_SOC_TRAQFC96
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec96/etc"
+fuse_port: "8111"
+fuse_user: "sec96"
+fuse_password: "*******"

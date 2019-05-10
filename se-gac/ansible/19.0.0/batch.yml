@@ -1,0 +1,11 @@
+---
+# file: batch.yml
+- hosts: jboss_hc_jboss
+  gather_facts: false
+  roles:
+    - batch_logiciel
+
+- hosts: jboss_hc_trace
+  gather_facts: false
+  roles:
+    - batch

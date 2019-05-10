@@ -1,0 +1,269 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([
+            string(defaultValue: "", description: "La version à compiler sous la forme 'X.Y.Z-LIVRAISON'.", name: "version"),
+            string(defaultValue: "", description: "Chemin où se trouve les sources à compiler.", name: "source")
+        ]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: "", artifactNumToKeepStr: "", daysToKeepStr: "", numToKeepStr: "15"))
+])
+
+if (params.version == "") {
+    echo "Parameter \"version\" is mandatory"
+    error "Parameter \"version\" is mandatory"
+}
+
+if (params.source == "") {
+    echo "Parameter \"source\" is mandatory"
+    error "Parameter \"source\" is mandatory"
+}
+
+node {
+    stage("Checkout") {
+        // Nettoie le workspace
+        sh "rm -rf \"$WORKSPACE\"/*"
+
+        // Copie des sources dans le workspace
+        sh "cp -r \"${params.source}\"/* \"$WORKSPACE\""
+    }
+
+    stage("Initializing parameters") {
+        // Chemin vers le pom.xml parent du product.
+        pomParent = "02-Sources/02-CodeSource/se-parent/pom.xml"
+
+        // Récupération et vérification de la version.
+        def pomDefinition = readMavenPom file: pomParent
+        version = pomDefinition.parent ? pomDefinition.parent.version : pomDefinition.version
+        maven.matchVersionPattern(version)
+        maven.matchVersion(version, params.version)
+
+        // Nom des artefacts binaires générés par le build à remonter dans Nexus.
+        // Ces artefacts seront déployés tels quels sur les serveurs (sans valorisation).
+        // batchs
+        batchTracesName = "traces-batch-shaded.jar"
+        utIntegrationAckName = "ut-integration-ack.jar"
+        // bundles
+        fluxCfeBenName = "demande-cfe-${version}.jar"
+        fluxInsBenName = "insertion-beneficiaire-${version}.jar"
+        fluxModBenName = "modification-beneficiaire-${version}.jar"
+        fluxRadBenName = "radiation-beneficiaire-${version}.jar"
+        fluxRecBenName = "recherche-beneficiaire-${version}.jar"
+        fluxRepBenName = "reprise-beneficiaire-${version}.jar"
+        moduleRoutageName = "module-routage-${version}.jar"
+        socleComName = "socle-commun-${version}.jar"
+        // connecteurs
+        connecteurCnamName = "connecteur-cnam-${version}.jar"
+        // base
+        baseName = "base.zip"
+
+        // Définition des différentes configurations à remonter dans le Nexus.
+        // Il faut définir un nom par groupe de fichiers qui seront rassemblés dans un zip.
+        // Ces groupes de fichiers seront valorisés selon les environnements avant déploiement.
+        configPrefixName = "config"
+        configClassifiers = ["p-bdu", "p-cfe", "p-gac", "p-scr", "p-taiga", "traces",
+                             "traces-batch",
+                             "f-cfe-ben", "f-ins-ben", "f-mod-ben", "f-rad-ben", "f-rec-ben", "f-rep-ben", "socle-com",
+                             "c-cnam",
+                             "features"]
+
+        outputDir = "tmp"
+    }
+
+    stage("Build") {
+        // Build du product.
+        // Préciser la version du JDK et de Maven à utiliser.
+        maven([java_tool : "jdk1.8.0_121",
+               maven_tool: "maven-3.5.0",
+               args      : "clean install --file \"$pomParent\""
+        ])
+    }
+
+    stage("QA Packaging") {
+        def inputTargetDir = "02-Sources/02-CodeSource/se-parent/distribution/target/distribution/se-distribution"
+        def inputEarDir = inputTargetDir + "/passerelles"
+        def inputBundlesDir = inputTargetDir + "/scripts & configs/01-Tools/templates/configs/flux"
+        def inputConnecteursDir = inputTargetDir + "/scripts & configs/01-Tools/templates/configs/connecteurs"
+        def inputConfigDir = inputTargetDir + "/scripts & configs/01-Tools/templates/configs"
+        def inputSoftDir = "soft"
+        def baseDir = "base"
+
+        // Copie des ears
+        sh "mkdir -p \"$outputDir/ear\""
+        sh "cp \"$inputEarDir\"/*.ear \"$outputDir/ear\""
+
+        // Copie des batchs
+        sh "mkdir -p \"$outputDir/batches\""
+        sh "cp \"$inputTargetDir/batches\"/*.jar \"$outputDir/batches\""
+
+        // Copie des bundles
+        def outputBundleDir = "$outputDir/bundles"
+        sh "mkdir -p \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_CFE_BEN/$version/jar/$fluxCfeBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_INS_BEN/$version/jar/$fluxInsBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_MOD_BEN/$version/jar/$fluxModBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_RAD_BEN/$version/jar/$fluxRadBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_REC_BEN/$version/jar/$fluxRecBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/F_REP_BEN/$version/jar/$fluxRepBenName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/SOCLE_COM/$version/jar/$moduleRoutageName\" \"$outputBundleDir\""
+        sh "cp \"$inputBundlesDir/SOCLE_COM/$version/jar/$socleComName\" \"$outputBundleDir\""
+
+        // Copie des connecteurs
+        def outputConnecteursDir = "$outputDir/connecteurs"
+        sh "mkdir -p \"$outputConnecteursDir\""
+        sh "cp \"$inputConnecteursDir/C_CNAM/$version/jar/$connecteurCnamName\" \"$outputConnecteursDir\""
+
+        // Copie des fichiers bases
+        sh "mkdir -p \"$outputDir/$baseDir/sql\""
+        sh "cp -R \"$inputSoftDir/sql\" \"$outputDir/$baseDir\""
+
+        // configuration
+        for (String configClassifier : configClassifiers) {
+            sh "mkdir -p \"$outputDir/$configPrefixName-$configClassifier\""
+        }
+        // Copie de la configuration des ear
+        sh "cp \"$inputConfigDir/passerelles/P_BDU/conf\"/* \"$outputDir/$configPrefixName-p-bdu\""
+        sh "cp \"$inputConfigDir/passerelles/P_CFE/conf\"/* \"$outputDir/$configPrefixName-p-cfe\""
+        sh "cp \"$inputConfigDir/passerelles/P_GAC/conf\"/* \"$outputDir/$configPrefixName-p-gac\""
+        sh "cp \"$inputConfigDir/passerelles/P_SCR/conf\"/* \"$outputDir/$configPrefixName-p-scr\""
+        sh "cp \"$inputConfigDir/passerelles/P_TAIGA/conf\"/* \"$outputDir/$configPrefixName-p-taiga\""
+        // Utilisation de "find" pour ne pas copier le sous repertoire "batch"
+        sh "find \"$inputConfigDir/passerelles/TRACES/conf\" -type f -maxdepth 1 -exec cp -t \"$outputDir/$configPrefixName-traces\" {} \\;"
+        sh "cp \"$inputConfigDir/traces-web\"/* \"$outputDir/$configPrefixName-traces\""
+        // Copie de la configuration des batchs
+        sh "cp \"$inputConfigDir/passerelles/TRACES/conf/batch\"/* \"$outputDir/$configPrefixName-traces-batch\""
+        sh "cp \"$inputConfigDir/ut/ut-integration-ack\"/* \"$outputDir/$configPrefixName-traces-batch\""
+        // Copie de la configuration des bundles
+        sh "cp \"$inputBundlesDir/F_CFE_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-cfe-ben\""
+        sh "cp \"$inputBundlesDir/F_INS_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-ins-ben\""
+        sh "cp \"$inputBundlesDir/F_MOD_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-mod-ben\""
+        sh "cp \"$inputBundlesDir/F_RAD_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-rad-ben\""
+        sh "cp \"$inputBundlesDir/F_REC_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-rec-ben\""
+        sh "cp \"$inputBundlesDir/F_REP_BEN/$version/conf\"/* \"$outputDir/$configPrefixName-f-rep-ben\""
+        sh "cp \"$inputBundlesDir/SOCLE_COM/$version/conf\"/* \"$outputDir/$configPrefixName-socle-com\""
+        // Copie de la configuration des connecteurs
+        sh "cp \"$inputConnecteursDir/C_CNAM/$version/conf\"/* \"$outputDir/$configPrefixName-c-cnam\""
+        // Copie des features des bundles
+        def bundleDirs = ["F_CFE_BEN", "F_INS_BEN", "F_MOD_BEN", "F_RAD_BEN", "F_REC_BEN", "F_REP_BEN", "SOCLE_COM"]
+        for (String bundleDir : bundleDirs) {
+            sh "mkdir -p \"$outputDir/$configPrefixName-features/$bundleDir/features\""
+            sh "cp \"$inputBundlesDir/$bundleDir/$version/deploy/features/features.xml\" \"$outputDir/$configPrefixName-features/$bundleDir/features\""
+        }
+        // Copie des features des connecteurs
+        sh "mkdir -p \"$outputDir/$configPrefixName-features/C_CNAM/features\""
+        sh "cp \"$inputConnecteursDir/C_CNAM/$version/deploy/features/features.xml\" \"$outputDir/$configPrefixName-features/C_CNAM/features\""
+
+        // Création des archives
+        zip dir: outputDir + "/" + baseDir, zipFile: outputDir + "/" + baseName
+        for (String configClassifier : configClassifiers) {
+            zip dir: outputDir + "/" + configPrefixName + "-" + configClassifier, zipFile: outputDir + "/" + configPrefixName + "-" + configClassifier + ".zip"
+        }
+    }
+
+    stage("Deploy") {
+        def groupId = "fr.rsi.se.distribution"
+        def earArtifactId = ["annuaire-ear",
+                             "passerelle-bdu-ear",
+                             "passerelle-cfe-ear",
+                             "passerelle-gac-ear",
+                             "passerelle-scr-ear",
+                             "passerelle-taiga-ear",
+                             "traces-ear"]
+        def bundlesArtifactId = ["demande-cfe",
+                                 "insertion-beneficiaire",
+                                 "modification-beneficiaire",
+                                 "radiation-beneficiaire",
+                                 "recherche-beneficiaire",
+                                 "reprise-beneficiaire",
+                                 "module-routage",
+                                 "socle-commun"]
+        def configArtifactId = "segac-config"
+
+        // Deploiement des ear
+        for (String artifactId : earArtifactId) {
+            mavenDeploy([
+                    groupId     : groupId,
+                    artifactId  : artifactId,
+                    version     : version,
+                    packaging   : "ear",
+                    file        : outputDir + "/ear/" + artifactId + "-" + version + ".ear",
+                    repositoryId: maven.getNexusRepositoryId(),
+                    url         : nexus.getApplicationRepositoryUrl(),
+                    classifier  : ""
+            ])
+        }
+
+        // Deploiement des batchs
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "traces-batch",
+                version     : version,
+                packaging   : "jar",
+                file        : outputDir + "/batches/" + batchTracesName,
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "ut-integration-ack",
+                version     : version,
+                packaging   : "jar",
+                file        : outputDir + "/batches/" + utIntegrationAckName,
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : ""
+        ])
+
+        // Deploiement des bundles
+        for (String artifactId : bundlesArtifactId) {
+            mavenDeploy([
+                    groupId     : groupId,
+                    artifactId  : artifactId,
+                    version     : version,
+                    packaging   : "jar",
+                    file        : outputDir + "/bundles/" + artifactId + "-" + version + ".jar",
+                    repositoryId: maven.getNexusRepositoryId(),
+                    url         : nexus.getApplicationRepositoryUrl(),
+                    classifier  : ""
+            ])
+        }
+
+        // Deploiement des connecteurs
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "connecteur-cnam",
+                version     : version,
+                packaging   : "jar",
+                file        : outputDir + "/connecteurs/" + connecteurCnamName,
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : ""
+        ])
+
+        // Deploiement de la base
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "segac-base",
+                version     : version,
+                packaging   : "zip",
+                file        : outputDir + "/" + baseName,
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : ""
+        ])
+
+        // Deploiement de la config
+        for (String classifier : configClassifiers) {
+            mavenDeploy([
+                    groupId     : groupId,
+                    artifactId  : configArtifactId,
+                    version     : version,
+                    packaging   : "zip",
+                    file        : outputDir + "/" + configPrefixName + "-" + classifier + ".zip",
+                    repositoryId: maven.getNexusRepositoryId(),
+                    url         : nexus.getApplicationRepositoryUrl(),
+                    classifier  : classifier
+            ])
+        }
+    }
+}

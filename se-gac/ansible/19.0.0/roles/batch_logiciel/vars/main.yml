@@ -1,0 +1,13 @@
+---
+work_directory: "~/work"
+
+# download task
+download_batch_traces_file: "traces-batch-{{version}}-shaded.jar"
+download_batch_traces_url: "{{nexus_application_repository}}/fr/rsi/se/distribution/traces-batch/{{version}}/{{download_batch_traces_file}}"
+download_ut_integration_ack_file: "ut-integration-ack-{{version}}.jar"
+download_ut_integration_ack_url: "{{nexus_application_repository}}/fr/rsi/se/distribution/ut-integration-ack/{{version}}/{{download_ut_integration_ack_file}}"
+
+# deploy task
+deploy_batch_traces_file: "traces-batch-shaded.jar"
+deploy_ut_integration_ack_file: "ut-integration-ack.jar"
+deploy_dest_directory: "/trace/logiciel/v{{version | replace('.','') | replace('-','')}}/bin"

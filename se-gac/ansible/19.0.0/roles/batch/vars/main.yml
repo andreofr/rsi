@@ -1,0 +1,13 @@
+---
+work_directory: "~/work"
+
+# download task
+download_config_file: "segac-config-{{env}}-{{version}}-traces-batch.zip"
+download_config_url: "{{nexus_valorisation_repository}}/fr/rsi/se/distribution/segac-config-{{env}}/{{version}}/{{download_config_file}}"
+
+# deploy task
+deploy_dest_directory: "~/conf/batch"
+
+# install task
+install_link_path: "~/vcur"
+install_link_src: "/trace/logiciel/v{{version | replace('.','') | replace('-','')}}"

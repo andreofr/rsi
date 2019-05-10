@@ -1,0 +1,19 @@
+---
+# file: fuseesb.yml
+- hosts: fuseesb_feadmin
+  gather_facts: false
+  roles:
+    - fuseesb_logiciel
+    - { role: fuseesb_config, classifier: "f-cfe-ben" }
+    - { role: fuseesb_config, classifier: "f-ins-ben" }
+    - { role: fuseesb_config, classifier: "f-mod-ben" }
+    - { role: fuseesb_config, classifier: "f-rad-ben" }
+    - { role: fuseesb_config, classifier: "f-rec-ben" }
+    - { role: fuseesb_config, classifier: "f-rep-ben" }
+    - { role: fuseesb_config, classifier: "socle-com" }
+    - { role: fuseesb_config, classifier: "c-cnam" }
+
+- hosts: fuseesb_se
+  gather_facts: false
+  roles:
+    - fuseesb_karaf

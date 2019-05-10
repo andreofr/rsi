@@ -1,0 +1,16 @@
+---
+- name: "Create working directory : {{work_directory}}"
+  file:
+    path: "{{work_directory}}"
+    state: directory
+
+- name: "Get files from nexus"
+  get_url:
+    url: "{{download_ear_url}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"

@@ -1,0 +1,17 @@
+---
+env: "C71"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQTC71
+profile_p_bdu: SE_BDUQTC71
+profile_p_cfe: SE_CFEQTC71
+profile_p_gac: SE_GACQTC71
+profile_p_scr: SE_SCRQTC71
+profile_p_taiga: SE_TAIGAQTC71
+profile_trace: SE_SOC_TRAQTC71
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec71/etc"
+fuse_port: "8114"
+fuse_user: "sec71"
+fuse_password: "*******"

@@ -1,0 +1,17 @@
+---
+env: "C97"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQTC97
+profile_p_bdu: SE_BDUQTC97
+profile_p_cfe: SE_CFEQTC97
+profile_p_gac: SE_GACQTC97
+profile_p_scr: SE_SCRQTC97
+profile_p_taiga: SE_TAIGAQTC97
+profile_trace: SE_SOC_TRAQTC97
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/etc"
+fuse_port: "8101"
+fuse_user: "feadmin"
+fuse_password: "*******"

@@ -1,0 +1,15 @@
+base_logiciel ansible_host=172.16.52.77 ansible_user=se
+base_vcur ansible_host=172.16.52.77 ansible_user=seqf44
+
+jboss_hc_p_bdu ansible_host=172.16.53.48 ansible_user=p_bduc44
+jboss_hc_p_cfe ansible_host=172.16.53.48 ansible_user=p_cfec44
+jboss_hc_p_gac ansible_host=172.16.53.48 ansible_user=p_gacc44
+jboss_hc_p_scr ansible_host=172.16.53.48 ansible_user=p_scrc44
+jboss_hc_p_taiga ansible_host=172.16.53.48 ansible_user=p_taigac44
+jboss_hc_trace ansible_host=172.16.53.48 ansible_user=tracec44
+jboss_hc_jboss ansible_host=172.16.53.48 ansible_user=jboss
+
+jboss_dc ansible_host=10.137.22.2 ansible_user=jboss
+
+fuseesb_feadmin ansible_host=10.92.191.207 ansible_user=feadmin
+fuseesb_se ansible_host=10.92.191.207 ansible_user=sec44

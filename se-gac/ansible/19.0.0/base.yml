@@ -1,0 +1,11 @@
+---
+# file: base.yml
+- hosts: base_logiciel
+  gather_facts: false
+  roles:
+    - base_logiciel
+
+- hosts: base_vcur
+  gather_facts: false
+  roles:
+    - base_vcur

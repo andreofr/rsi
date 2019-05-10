@@ -1,0 +1,16 @@
+---
+- name: "Create working directory : {{work_directory}}"
+  file:
+    path: "{{work_directory}}"
+    state: directory
+
+# batch
+- name: "Get files from Nexus"
+  get_url:
+    url: "{{item}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"
+  with_items:
+    - "{{download_batch_traces_url}}"
+    - "{{download_ut_integration_ack_url}}"

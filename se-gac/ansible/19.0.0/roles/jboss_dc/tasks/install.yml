@@ -1,0 +1,7 @@
+---
+- name: "Deploy ear"
+  shell: "/j2eetools/jboss/scripts/jbdeployenv.ksh {{ear.profile}} {{jboss_password}}"
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"

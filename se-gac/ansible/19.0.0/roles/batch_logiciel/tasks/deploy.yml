@@ -1,0 +1,32 @@
+---
+# bin
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Copy batch files"
+  copy:
+    src: "{{work_directory}}/{{item.srcfile}}"
+    dest: "{{deploy_dest_directory}}/{{item.destfile}}"
+    remote_src: yes
+  with_items:
+    - { srcfile: "{{download_batch_traces_file}}", destfile: "{{deploy_batch_traces_file}}" }
+    - { srcfile: "{{download_ut_integration_ack_file}}", destfile: "{{deploy_ut_integration_ack_file}}" }
+
+- name: "Set files executable : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}/{{item}}"
+    mode: 0755
+    state: file
+  with_items:
+    - "{{deploy_batch_traces_file}}"
+    - "{{deploy_ut_integration_ack_file}}"
+
+- name: "Remove files from {{work_directory}}"
+  file:
+    path: "{{work_directory}}/{{item}}"
+    state: absent
+  with_items:
+    - "{{deploy_batch_traces_file}}"
+    - "{{deploy_ut_integration_ack_file}}"

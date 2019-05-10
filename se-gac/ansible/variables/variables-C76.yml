@@ -1,0 +1,17 @@
+---
+env: "C76"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC76
+profile_p_bdu: SE_BDUQFC76
+profile_p_cfe: SE_CFEQFC76
+profile_p_gac: SE_GACQFC76
+profile_p_scr: SE_SCRQFC76
+profile_p_taiga: SE_TAIGAQFC76
+profile_trace: SE_SOC_TRAQFC76
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec76/etc"
+fuse_port: "8108"
+fuse_user: "sec76"
+fuse_password: "*******"

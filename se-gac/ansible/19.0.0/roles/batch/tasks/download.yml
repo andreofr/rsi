@@ -1,0 +1,13 @@
+---
+- name: "Create working directory : {{work_directory}}"
+  file:
+    path: "{{work_directory}}"
+    state: directory
+
+# batch
+- name: "Get file : {{download_config_url}}"
+  get_url:
+    url: "{{download_config_url}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"

@@ -1,0 +1,16 @@
+---
+- name: "Create working directory : {{work_directory}}"
+  file:
+    path: "{{work_directory}}"
+    state: directory
+
+# base
+- name: "Get files"
+  get_url:
+    url: "{{item}}"
+    url_username: "{{nexus_login}}"
+    url_password: "{{nexus_password}}"
+    dest: "{{work_directory}}"
+  with_items:
+    - "{{download_base_url}}"
+    - "{{download_base_qi_url}}"

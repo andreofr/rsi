@@ -1,0 +1,51 @@
+---
+# bundles
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Check bundles directories"
+  file:
+    path: "{{deploy_dest_directory}}/{{bundle.dest_dir}}/jar"
+    state: directory
+  vars:
+    bundle: "{{item}}"
+  with_items:
+    - "{{bundles}}"
+
+- name: "Copy bundles files"
+  copy:
+    src: "{{work_directory}}/{{download_bundle_file}}"
+    dest: "{{deploy_dest_directory}}/{{bundle.dest_dir}}/jar/{{deploy_bundle_file}}"
+    remote_src: yes
+  vars:
+    bundle: "{{item}}"
+  with_items:
+    - "{{bundles}}"
+
+- name: "Remove bundle files from {{work_directory}}"
+  file:
+    path: "{{work_directory}}/{{download_bundle_file}}"
+    state: absent
+  vars:
+    bundle: "{{item}}"
+  with_items:
+    - "{{bundles}}"
+
+# features
+- name: "Unzip features : {{download_features_file}}"
+  unarchive:
+    src: "{{work_directory}}/{{download_features_file}}"
+    dest: "{{deploy_dest_directory}}"
+    remote_src: yes
+
+- name: "Remove file : {{deploy_dest_directory}}/{{env}}.properties"
+  file:
+    path: "{{deploy_dest_directory}}/{{env}}.properties"
+    state: absent
+
+- name: "Remove features from {{work_directory}}"
+  file:
+    path: "{{work_directory}}/{{download_features_file}}"
+    state: absent

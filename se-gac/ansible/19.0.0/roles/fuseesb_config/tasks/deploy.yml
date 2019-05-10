@@ -1,0 +1,22 @@
+---
+# config
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Unzip file : {{download_config_file}}"
+  unarchive:
+    src: "{{work_directory}}/{{download_config_file}}"
+    dest: "{{deploy_dest_directory}}"
+    remote_src: yes
+
+- name: "Remove file : {{deploy_dest_directory}}/{{env}}.properties"
+  file:
+    path: "{{deploy_dest_directory}}/{{env}}.properties"
+    state: absent
+
+- name: "Remove file : {{work_directory}}/{{download_config_file}}"
+  file:
+    path: "{{work_directory}}/{{download_config_file}}"
+    state: absent

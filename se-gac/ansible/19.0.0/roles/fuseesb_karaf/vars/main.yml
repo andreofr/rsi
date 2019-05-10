@@ -1,0 +1,15 @@
+---
+work_directory: "~/work"
+
+# install task
+install_link_path: "~/vcur"
+install_link_src: "/se/logiciel/{{version}}"
+
+bundle_directory: "/se/{{env | lower}}/vcur"
+bundles:
+  - "SOCLE_COM"
+  - "F_CFE_BEN"
+  - "F_INS_BEN"
+  - "F_RAD_BEN"
+  - "F_REC_BEN"
+  - "F_REP_BEN"

@@ -1,0 +1,37 @@
+---
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}/{{ear.profile}}"
+    state: directory
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"
+
+- name: "Copy ear files to {{deploy_dest_directory}}"
+  copy:
+    src: "{{work_directory}}/{{download_ear_file}}"
+    dest: "{{deploy_dest_directory}}/{{ear.profile}}/{{deploy_ear_file}}"
+    remote_src: yes
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"
+
+- name: "Create file : .num"
+  copy:
+    content: "{{version | regex_replace('-', '_')}}"
+    dest: "{{deploy_dest_directory}}/{{ear.profile}}/.num"
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"
+
+- name: "Remove files from {{work_directory}}"
+  file:
+    path: "{{work_directory}}/{{download_ear_file}}"
+    state: absent
+  vars:
+    ear: "{{item}}"
+  with_items:
+    - "{{ears}}"

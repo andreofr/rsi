@@ -1,0 +1,132 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([string(defaultValue: "", description: "Chemin où se trouve les sources de qualification.", name: "source")]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: "", artifactNumToKeepStr: "", daysToKeepStr: "", numToKeepStr: "15")),
+        pipelineTriggers([])
+])
+
+if (params.source == "") {
+    echo "Parameter \"source\" is mandatory"
+    error "Parameter \"source\" is mandatory"
+}
+
+node {
+    stage("Checkout") {
+        // Nettoie le workspace
+        sh "rm -rf \"$WORKSPACE\"/*"
+
+        // Copie des sources dans le workspace
+        sh "cp -r \"${params.source}\"/* \"$WORKSPACE\""
+    }
+
+    stage("Initializing parameters") {
+        groupId = "fr.rsi.se.distribution"
+        artifactId = "segac-config"
+        // Récupération de la version.
+        version = readFile("version.txt").trim()
+
+        propertiesFilesPath = "pic/valorisation"
+        propertiesFiles = sh(returnStdout: true, script: "(ls ${propertiesFilesPath})").tokenize()
+
+        baseQiName = "base-qi.zip"
+        baseQiArtifactId = "segac-base-qi"
+
+        configClassifiers = ["p-bdu", "p-cfe", "p-gac", "p-scr", "p-taiga", "traces",
+                             "traces-batch",
+                             "f-cfe-ben", "f-ins-ben", "f-mod-ben", "f-rad-ben", "f-rec-ben", "f-rep-ben", "socle-com",
+                             "c-cnam",
+                             "features"]
+
+        outputDir = "tmp"
+    }
+
+    stage('Downloading configuration files') {
+        for (String classifier : configClassifiers) {
+            mavenDownload([
+                    groupId        : groupId,
+                    artifactId     : artifactId,
+                    version        : version,
+                    packaging      : "zip",
+                    classifier     : classifier,
+                    outputDirectory: outputDir
+            ])
+            dir(outputDir) {
+                def path = artifactId + "-" + version + "-" + classifier
+                def file = artifactId + "-" + version + "-" + classifier + ".zip"
+                unzip dir: path, zipFile: file
+            }
+        }
+    }
+
+    stage('QA Variabilization') {
+        def pomFileDir = "pic-valorisation"
+        dir(pomFileDir) {
+            checkoutPomValorisation()
+        }
+
+        def pomFile = pomFileDir + "/" + checkoutPomValorisation.getPomValorisationPath()
+
+        for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+            for (String classifier : configClassifiers) {
+                def input = outputDir + "/" + artifactId + "-" + version + "-" + classifier
+                def output = outputDir + "/" + artifactId + "-" + version + "-" + classifier + "-" + propertiesFilename
+                maven([
+                        args: "resources:copy-resources" +
+                                " -f \"$pomFile\"" +
+                                " -Dinput=\"$WORKSPACE/$input\"" +
+                                " -Doutput=\"$WORKSPACE/$output\"" +
+                                " -DpropertiesFile=\"$WORKSPACE/$propertiesFilesPath/$propertiesFile\""
+                ])
+                sh "cp \"$propertiesFilesPath/$propertiesFile\" \"$output/$propertiesFile\""
+            }
+        }
+    }
+
+    stage('QA Packaging') {
+        for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+            for (String classifier : configClassifiers) {
+                dir(outputDir) {
+                    def path = artifactId + "-" + version + "-" + classifier + "-" + propertiesFilename
+                    def file = artifactId + "-" + version + "-" + classifier + "-" + propertiesFilename + ".zip"
+                    zip dir: path, zipFile: file
+                }
+            }
+        }
+        // Scripts QI
+        zip dir: "base", zipFile: outputDir + "/" + baseQiName
+    }
+
+    stage('Deploy') {
+        for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+            for (String classifier : configClassifiers) {
+                def artifactIdToDeploy = artifactId + "-" + propertiesFilename
+                def file = outputDir + "/" + artifactId + "-" + version + "-" + classifier + "-" + propertiesFilename + ".zip"
+                mavenDeploy([
+                        groupId     : groupId,
+                        artifactId  : artifactIdToDeploy,
+                        version     : version,
+                        packaging   : "zip",
+                        file        : file,
+                        repositoryId: maven.getNexusRepositoryId(),
+                        url         : nexus.getValorisationRepositoryUrl(),
+                        classifier  : classifier
+                ])
+            }
+        }
+        // Scripts QI
+        mavenDeploy([
+            groupId     : groupId,
+            artifactId  : baseQiArtifactId,
+            version     : version,
+            packaging   : "zip",
+            file        : outputDir + "/" + baseQiName,
+            repositoryId: maven.getNexusRepositoryId(),
+            url         : nexus.getQualificationRepositoryUrl(),
+            classifier  : ""
+        ])
+    }
+}

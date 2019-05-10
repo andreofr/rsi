@@ -1,0 +1,43 @@
+---
+# file: web.yml
+- name: "Install configuration for p_bdu"
+  hosts: jboss_hc_p_bdu
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "p-bdu" }
+
+- name: "Install configuration for p_cfe"
+  hosts: jboss_hc_p_cfe
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "p-cfe" }
+
+- name: "Install configuration for p_gac"
+  hosts: jboss_hc_p_gac
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "p-gac" }
+
+- name: "Install configuration for p_scr"
+  hosts: jboss_hc_p_scr
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "p-scr" }
+
+- name: "Install configuration for p_taiga"
+  hosts: jboss_hc_p_taiga
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "p-taiga" }
+
+- name: "Install configuration for traces"
+  hosts: jboss_hc_trace
+  gather_facts: false
+  roles:
+    - { role: jboss_hc, classifier: "traces" }
+
+- name: "Install EAR"
+  hosts: jboss_dc
+  gather_facts: false
+  roles:
+    - jboss_dc

@@ -1,0 +1,17 @@
+---
+env: "C44"
+
+jboss_password: "*******"
+profile_annuaire: SE_SOC_ANNQFC44
+profile_p_bdu: SE_BDUQFC44
+profile_p_cfe: SE_CFEQFC44
+profile_p_gac: SE_GACQFC44
+profile_p_scr: SE_SCRQFC44
+profile_p_taiga: SE_TAIGAQFC44
+profile_trace: SE_SOC_TRAQFC44
+
+fuse_client: "/fe/fuseesb/esb/bin/client"
+fuse_etc_dir: "/fe/fuseesb/esb/instances/sec44/etc"
+fuse_port: "8106"
+fuse_user: "sec44"
+fuse_password: "*******"

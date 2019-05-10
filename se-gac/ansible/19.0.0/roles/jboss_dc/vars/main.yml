@@ -1,0 +1,19 @@
+---
+work_directory: "~/work"
+
+ears:
+  - { name: "annuaire-ear", profile: "{{profile_annuaire}}" }
+  - { name: "passerelle-bdu-ear", profile: "{{profile_p_bdu}}" }
+  - { name: "passerelle-cfe-ear", profile: "{{profile_p_cfe}}" }
+  - { name: "passerelle-gac-ear", profile: "{{profile_p_gac}}" }
+  - { name: "passerelle-scr-ear", profile: "{{profile_p_scr}}" }
+  - { name: "passerelle-taiga-ear", profile: "{{profile_p_taiga}}" }
+  - { name: "traces-ear", profile: "{{profile_trace}}" }
+
+# download task
+download_ear_file: "{{ear.name}}-{{version}}.ear"
+download_ear_url: "{{nexus_application_repository}}/fr/rsi/se/distribution/{{ear.name}}/{{version}}/{{download_ear_file}}"
+
+# deploy task
+deploy_ear_file: "{{ear.name}}.ear"
+deploy_dest_directory: "/tmp"
