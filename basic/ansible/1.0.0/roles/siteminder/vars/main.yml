@@ -1,0 +1,11 @@
+---
+gestpolicyserver_dir: "C:/Netegrity/gestionPS"
+work_directory: "{{gestpolicyserver_dir}}/BASIC"
+
+# download task
+download_siteminder_file: "basic-config-{{env}}-{{version}}-siteminder.zip"
+download_siteminder_url: "{{nexus_url}}/repository/rsi-qualification/fr/rsi/basic/basic-config-{{env}}/{{version}}/{{download_siteminder_file}}"
+
+
+# deploy task
+deploy_siteminder_file: "basic-config-{{env}}-{{version}}-siteminder.zip"

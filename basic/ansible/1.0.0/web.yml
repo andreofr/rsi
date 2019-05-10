@@ -1,0 +1,6 @@
+---
+# file: web.yml
+- hosts: jboss_dc
+  gather_facts: false
+  roles:
+    - jboss_dc

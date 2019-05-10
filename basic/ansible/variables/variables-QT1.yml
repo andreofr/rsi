@@ -1,0 +1,13 @@
+---
+env: "QT1"
+server_name: "BASICQT1"
+postgresql_base: b_basicqt1
+postgresql_schema: s_basicqt1
+postgresql_user: u_basicqt1
+postgresql_password: *******
+posgresql_appli: basic
+posgresql_env: qt1
+siteminder_user: siteminder
+siteminder_password: *******
+hc_user: basicqt1
+hc_conf_env : qt1

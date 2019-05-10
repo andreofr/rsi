@@ -1,0 +1,6 @@
+---
+# file: postgresql.yml
+- hosts: postgresql
+  gather_facts: false
+  roles:
+    - postgresql

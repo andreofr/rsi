@@ -1,0 +1,5 @@
+---
+# file: all.yml
+- include: postgresql.yml
+- include: siteminder.yml
+- include: web.yml

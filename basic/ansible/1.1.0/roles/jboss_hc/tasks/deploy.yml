@@ -1,0 +1,24 @@
+---
+# conf
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Copying file : {{download_conf_file}}"
+  copy:
+    src: "{{work_directory}}/{{download_conf_file}}"
+    dest: "{{deploy_dest_directory}}/{{download_conf_file}}"
+    remote_src: yes
+
+- name: "Check file : {{deploy_dest_directory}}/{{download_conf_file}}"
+  file:
+    path: "{{deploy_dest_directory}}/{{download_conf_file}}"
+    state: file
+
+- name: "Unzip {{deploy_dest_directory}}/{{download_conf_file}}"
+  shell : "unzip -o {{deploy_dest_directory}}/{{download_conf_file}} -d {{deploy_dest_directory}}"
+
+- name: "Demete {{deploy_dest_directory}}/{{download_conf_file}}"
+  shell : "rm -f {{deploy_dest_directory}}/{{download_conf_file}}"
+

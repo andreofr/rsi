@@ -1,0 +1,2 @@
+- name: SAVE database
+  shell: "pgenv {{posgresql_appli}} {{posgresql_env}};/dbatools/postgresql/sh/Uxpgsadmin -O export -A {{posgresql_appli}} -C {{posgresql_env}} -B {{postgresql_base}}"

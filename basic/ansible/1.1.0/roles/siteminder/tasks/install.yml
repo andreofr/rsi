@@ -1,0 +1,6 @@
+
+#- name: "Supprimer les anciennes regles Siteminder "
+#  win_shell: "cd {{work_directory}}/{{env}}/{{version}} ; {{gestpolicyserver_dir}}/gestionpolicyserver.exe ./BASIC.ini suppApp {{siteminder_user}} {{siteminder_password}} "
+
+- name: "Installer les nouvelles regles Siteminder "
+  win_shell: "cd {{work_directory}}/{{env}}/{{version}} ; {{gestpolicyserver_dir}}/gestionpolicyserver.exe ./BASIC.ini InitPS {{siteminder_user}} {{siteminder_password}}"

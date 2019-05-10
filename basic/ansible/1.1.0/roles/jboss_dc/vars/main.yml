@@ -1,0 +1,15 @@
+---
+work_directory: "~/work"
+
+# download task
+download_ear_file: "basic-web-{{version}}.ear"
+download_ear_url: "{{nexus_url}}/repository/rsi-application/fr/rsi/basic/basic-web/{{version}}/{{download_ear_file}}"
+download_conf_file: "basic-config-{{env}}-{{version}}-jboss.zip"
+download_conf_url: "{{nexus_url}}/repository/rsi-qualification/fr/rsi/basic/basic-config-{{env}}/{{version}}/{{download_conf_file}}"
+
+# deploy task
+deploy_ear_file: "basic-web-{{version}}.ear"
+deploy_ear_file_target : "BASIC_{{version}}.ear"
+deploy_conf_file: "basic-config-{{env}}-{{version}}-jboss.zip"
+deploy_dest_directory: "/jboss/livraison/BASIC{{env}}"
+deploy_scp: "/basic/{{env}}/conf"

@@ -1,0 +1,11 @@
+---
+
+- name: "Check directory : : {{work_directory}}/{{env}}"
+  win_stat:
+    path: "{{work_directory}}/{{env}}"
+  register: stat_folder
+
+- name: "Unzip file : {{download_siteminder_file}}"
+  win_unzip:
+    src: "{{work_directory}}/{{env}}/{{deploy_siteminder_file}}"
+    dest: "{{work_directory}}/{{env}}/{{version}}"

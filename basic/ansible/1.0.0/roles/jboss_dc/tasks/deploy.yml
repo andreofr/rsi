@@ -1,0 +1,39 @@
+---
+# ear
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Copying file : {{deploy_ear_file}}"
+  copy:
+    src: "{{work_directory}}/{{deploy_ear_file}}"
+    dest: "{{deploy_dest_directory}}/{{deploy_ear_file_target}}"
+    remote_src: yes
+
+- name: "Check file : {{deploy_dest_directory}}/{{deploy_ear_file_target}}"
+  file:
+    path: "{{deploy_dest_directory}}/{{deploy_ear_file_target}}"
+    state: file
+
+- name: "Replace  {{deploy_dest_directory}}/{{deploy_ear_file_target}} (X.Y.Z-Livraison to X.Y.Z_Livraison)"
+  shell : "mv {{deploy_dest_directory}}/{{deploy_ear_file_target}} {{deploy_dest_directory}}/{{deploy_ear_file_target | regex_replace('-', '_')}}"
+# conf
+- name: "Check directory : {{deploy_dest_directory}}"
+  file:
+    path: "{{deploy_dest_directory}}"
+    state: directory
+
+- name: "Copying file : {{download_conf_file}}"
+  copy:
+    src: "{{work_directory}}/{{download_conf_file}}"
+    dest: "{{deploy_dest_directory}}/{{download_conf_file}}"
+    remote_src: yes
+
+- name: "Check file : {{deploy_dest_directory}}/{{download_conf_file}}"
+  file:
+    path: "{{deploy_dest_directory}}/{{download_conf_file}}"
+    state: file
+
+- name: "Unzip {{deploy_dest_directory}}/{{download_conf_file}}"
+  shell : "unzip -o {{deploy_dest_directory}}/{{download_conf_file}} -d {{deploy_dest_directory}}"

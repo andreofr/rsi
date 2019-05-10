@@ -1,0 +1,2 @@
+- name: MAJ database
+  shell: ". {{PG_RACINE.stdout}}/.profile; {{PG_RACINE.stdout}}/sh/basic.sh"

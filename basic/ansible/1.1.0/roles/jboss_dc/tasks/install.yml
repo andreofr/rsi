@@ -1,0 +1,7 @@
+---
+- name: "Stoping server"
+  shell: "/generic/script/Uxjbstartstop {{server_name}} stopsa"
+- name: "Deploying ear"
+  shell: "/generic/script/Uxjbdeploy {{server_name}}"
+- name: "Starting server"
+  shell: "/generic/script/Uxjbstartstop {{server_name}} startsa"  

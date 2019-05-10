@@ -1,0 +1,34 @@
+---
+# base
+- name: "Get environment variable : $PG_RACINE"
+  shell: "PG_RACINE=/{{posgresql_appli}}/{{posgresql_env}}; echo $PG_RACINE"
+  register: PG_RACINE
+
+- name: "Debug : display $PG_RACINE"
+  debug:
+     var: "PG_RACINE.stdout"
+
+- name: "Check directory : {{PG_RACINE.stdout}}"
+  file:
+    path: "{{PG_RACINE.stdout}}"
+    state: directory
+
+- name: "Unzip file : {{deploy_base_file}}"
+  unarchive:
+    src: "{{work_directory}}/{{deploy_base_file}}"
+    dest: "{{PG_RACINE.stdout}}"
+    remote_src: yes
+
+- name: "chmod -R 755 {{PG_RACINE.stdout}}/sh/"
+  file:
+    path: "{{PG_RACINE.stdout}}/sh"
+    state: directory
+    mode: 0755
+    recurse: yes
+
+- name: "chmod -R 770 {{PG_RACINE.stdout}}/sql/"
+  file:
+    path: "{{PG_RACINE.stdout}}/sql"
+    state: directory
+    mode: 0755
+    recurse: yes

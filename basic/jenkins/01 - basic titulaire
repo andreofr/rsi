@@ -1,0 +1,168 @@
+#!/usr/bin/env groovy
+
+properties([
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15')),
+        pipelineTriggers([pollSCM('')])
+])
+
+node {
+    stage('Checkout') {
+        checkout([$class                           : 'GitSCM',
+                  branches                         : [[name: '*/tags/*']],
+                  doGenerateSubmoduleConfigurations: false,
+                  extensions                       : [[$class: 'CleanBeforeCheckout'], [$class: 'PruneStaleBranch']],
+                  submoduleCfg                     : [],
+                  userRemoteConfigs                : [[credentialsId: 'basic', refspec: '+refs/tags/*:refs/remotes/origin/tags/*', url: 'basic@10.92.193.96:/~/basic.git']]
+        ])
+    }
+
+    stage('Initializing parameters') {
+        pom = "sources/pom.xml"
+        pomDefinition = readMavenPom file: pom
+        //def finalName = pomDefinition.build.finalName ? pomDefinition.build.finalName : pomDefinition.artifactId
+        //def packaging = pomDefinition.packaging ? pomDefinition.packaging : "jar"
+		def finalName = pomDefinition.build.finalName ? pomDefinition.build.finalName : pomDefinition.name
+        def packaging = "ear"
+        def version = pomDefinition.version
+
+        earName = finalName + "." + packaging
+		
+		configJBossName = "jboss-hc.zip"
+		jbcliJBossName = "jboss-cli.zip"
+		configPostgresName = "postgresql.zip"
+		configSiteminderName = "siteminder.zip"
+		
+		outputDir = "tmp/" + version		
+    }
+
+    stage('Build') {
+        mvn "clean install" +
+                " --file \"" + pom + "\""
+    }
+    
+    stage('QA Packaging') {
+        def inputTargetDir = "sources/basic-ear/target/dist"
+		def inputJBossDir = "conf"
+		def inputJBossCliDir = "jboss"
+		def inputPostgresDir = "postgresql"
+        def inputSiteminder = "siteminder"
+
+        // copie des binaires
+        sh "mkdir -p \"$outputDir\""
+        sh "cp \"$inputTargetDir\"/\"$earName\" \"$outputDir\"/\"$earName\""
+		
+		// création du packaging config jboss
+        sh "mkdir -p \"$outputDir\"/\"$inputJBossDir\""
+        sh "cp -r \"$inputTargetDir\"/\"$inputJBossDir\"/* \"$outputDir\"/\"$inputJBossDir\""
+
+        // création du packaging cli jboss
+        sh "mkdir -p \"$outputDir\"/\"$inputJBossCliDir\""
+        sh "cp -r \"$inputJBossCliDir\"/* \"$outputDir\"/\"$inputJBossCliDir\""
+
+        // création du packaging postgres
+        sh "mkdir -p \"$outputDir\"/\"$inputPostgresDir\""
+        sh "cp -r \"$inputPostgresDir\"/* \"$outputDir\"/\"$inputPostgresDir\""
+
+        // création du packaging siteminder
+        sh "mkdir -p \"$outputDir\"/\"$inputSiteminder\""
+        sh "cp -r \"$inputSiteminder\"/* \"$outputDir\"/\"$inputSiteminder\""
+
+        // création des archives
+		zip dir: outputDir + "/" + inputJBossDir, zipFile: outputDir + "/" + configJBossName
+		zip dir: outputDir + "/" + inputJBossCliDir, zipFile: outputDir + "/" + jbcliJBossName
+        zip dir: outputDir + "/" + inputPostgresDir, zipFile: outputDir + "/" + configPostgresName
+        zip dir: outputDir + "/" + inputSiteminder, zipFile: outputDir + "/" + configSiteminderName
+    }
+
+	stage('Deploy') {
+        def nexusRepositoryId = "rsi-nexus"
+        def nexusUrl = "http://10.92.193.76:8081/repository/rsi-application/"
+
+        def groupId = pomDefinition.groupId
+        def version = pomDefinition.version
+        def webArtifactId = "basic-web"
+		def dbArtifactId = "basic-bdd"
+		def configArtifactId = "basic-config"
+		//def smArtifactId = "basic-sm"
+		//def jbcliArtifactId = "basic-cli"
+		
+		def webClassifier = ""
+		def configJBossClassifier = "jboss"
+		def cliJBossClassifier = "jboss-cli"
+        def configPostgresClassifier = "postgresql"
+        def configSiteminderClassifier = "siteminder"
+
+        // deploiement de l'EAR
+        //mvn_deploy pom, outputDir + "/" + earName, nexusRepositoryId, nexusUrl
+		mvn_deploy groupId, webArtifactId, version, "ear", outputDir + "/" + earName, nexusRepositoryId, nexusUrl, webClassifier
+
+        // deploiement de la config jboss
+        mvn_deploy groupId, configArtifactId, version, "zip", outputDir + "/" + configJBossName, nexusRepositoryId, nexusUrl, configJBossClassifier
+		
+		// deploiement de la cli jboss
+        mvn_deploy groupId, configArtifactId, version, "zip", outputDir + "/" + jbcliJBossName, nexusRepositoryId, nexusUrl, cliJBossClassifier
+
+		// deploiement de la config postgres
+        mvn_deploy groupId, dbArtifactId, version, "zip", outputDir + "/" + configPostgresName, nexusRepositoryId, nexusUrl, configPostgresClassifier
+
+        // deploiement siteminder
+        mvn_deploy groupId, configArtifactId, version, "zip", outputDir + "/" + configSiteminderName, nexusRepositoryId, nexusUrl, configSiteminderClassifier
+    }
+
+}
+
+/**
+ * Méthode pour utiliser maven avec une version de java et de maven spécifique.
+ * @param args les paramètres à donner à maven
+ * @return
+ */
+def mvn(args) {
+    withEnv([
+            "JAVA_HOME=${tool 'jdk1.8.0_121'}",
+            "M2_HOME=${tool 'maven-3.5.0'}",
+            "PATH+MAVEN=${tool 'maven-3.5.0'}/bin:${tool 'jdk1.8.0_121'}/bin"
+    ]) {
+        sh "mvn $args"
+    }
+}
+
+/**
+ * Méthode pour déployer.
+ * @param groupId l'id groupe de l'artefact.
+ * @param artifactId l'id de l'artefact.
+ * @param version la version de l'artefact.
+ * @param packaging le type de l'artefact.
+ * @param file le chemin vers l'artefact.
+ * @param repositoryId l'id à mapper sur la section server du settings.xml
+ * @param url l'adresse du repository où déployer.
+ * @param classifier le classifier de l'artefact.
+ * @return
+ */
+def mvn_deploy(groupId, artifactId, version, packaging, file, repositoryId, url, classifier) {
+    mvn "deploy:deploy-file" +
+            " -DgroupId=\"" + groupId + "\"" +
+            " -DartifactId=\"" + artifactId + "\"" +
+            " -Dversion=\"" + version + "\"" +
+            " -Dpackaging=\"" + packaging + "\"" +
+            " -Dfile=\"" + file + "\"" +
+            " -DrepositoryId=\"" + repositoryId + "\"" +
+            " -Durl=\"" + url + "\"" +
+            " -Dclassifier=\"" + classifier + "\"" +
+            " -DgeneratePom=false"
+}
+
+/**
+ * Méthode pour déployer avec un fichier pom.xml.
+ * @param file le chemin vers le pom.xml.
+ * @param file le chemin vers l'artefact.
+ * @param repositoryId l'id à mapper sur la section server du settings.xml
+ * @param url l'adresse du repository où déployer.
+ * @return
+ */
+def mvn_deploy(pomFile, file, repositoryId, url) {
+    mvn "deploy:deploy-file" +
+            " -DpomFile=\"" + pomFile + "\"" +
+            " -Dfile=\"" + file + "\"" +
+            " -DrepositoryId=\"" + repositoryId + "\"" +
+            " -Durl=\"" + url + "\""
+}

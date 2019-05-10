@@ -1,0 +1,4 @@
+- name: Create database
+  shell: ". {{PG_RACINE.stdout}}/.profile; psql -d {{postgresql_base}} -U {{postgresql_user}} -f {{PG_RACINE.stdout}}/sql/basic_full_create.sql"
+- name: Init database
+  shell: ". {{PG_RACINE.stdout}}/.profile; psql -d {{postgresql_base}} -U {{postgresql_user}} -f {{PG_RACINE.stdout}}/sql/basic_full_insert.sql"

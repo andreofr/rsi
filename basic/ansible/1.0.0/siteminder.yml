@@ -1,0 +1,6 @@
+---
+# file: siteminder.yml
+- hosts: siteminder
+  gather_facts: false
+  roles:
+    - siteminder

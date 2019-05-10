@@ -1,0 +1,22 @@
+---
+
+- name: "Create working directory : {{work_directory}}/{{env}}"
+  win_shell: mkdir {{work_directory}}/{{env}}
+  args:
+    chdir: "{{gestpolicyserver_dir}}"
+    creates: "{{work_directory}}/{{env}}/"
+
+# siteminder
+- name: "Get file : {{download_siteminder_url}}"
+  win_get_url:
+    url: "{{download_siteminder_url}}"
+    dest: "{{work_directory}}/{{env}}/{{download_siteminder_file}}"
+    username: "{{nexus_login}}"
+    password: "{{nexus_password}}"
+    use_proxy: no
+
+- name: "Check file : {{work_directory}}/{{env}}/{{download_siteminder_file}}"
+  win_stat:
+    path: "{{work_directory}}/{{env}}/{{download_siteminder_file}}"
+  register: stat_file
+

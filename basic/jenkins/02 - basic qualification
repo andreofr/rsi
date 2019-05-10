@@ -1,0 +1,203 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([string(defaultValue: '', description: 'Chemin où se trouve les sources.', name: 'source')]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15')),
+        pipelineTriggers([])
+])
+
+if (params.source == "") {
+    echo "Parameter \"source\" is mandatory"
+    error "Parameter \"source\" is mandatory"
+}
+
+node {
+    stage('Checkout') {
+        // nettoie le workspace
+        sh "cd \"$WORKSPACE\" && rm -rf *"
+
+        // copie des sources dans le workspace
+        sh "cp -r \"$source\"/* \"$WORKSPACE\""
+    }
+
+    stage('Initializing parameters') {
+        version = readFile("version.txt").trim()
+
+        groupId = "fr.rsi.basic"
+
+        earArtifactId = "basic-web"
+        earPackaging = "ear"
+
+        dbArtifactId = "basic-bdd"
+		configArtifactId = "basic-config"
+        configPackaging = "zip"
+		
+		configJBossClassifier = "jboss"
+		cliJBossClassifier = "jboss-cli"
+        configPostgresClassifier = "postgresql"
+        configSiteminderClassifier = "siteminder"
+		
+		configClassifiers = [configJBossClassifier, cliJBossClassifier, configSiteminderClassifier]
+		//configClassifiers = [configJBossClassifier]
+        propertiesFiles = sh(returnStdout: true, script: "(ls installation/conf)").tokenize()
+
+        outputDir = "tmp/" + version
+    }
+
+    stage('Downloading database files') {
+        mvn_download groupId, dbArtifactId, version, configPackaging, configPostgresClassifier, outputDir
+        dir(outputDir) {
+            def configPath = dbArtifactId + "-" + version + "-" + configPostgresClassifier
+            def configFile = dbArtifactId + "-" + version + "-" + configPostgresClassifier + "." + configPackaging
+           unzip dir: configPath, zipFile: configFile
+        }
+    }
+	
+	stage('Downloading configuration files') {
+        for (String classifier : configClassifiers) {
+            mvn_download groupId, configArtifactId, version, configPackaging, classifier, outputDir
+            dir(outputDir) {
+                def configPath = configArtifactId + "-" + version + "-" + classifier
+                def configFile = configArtifactId + "-" + version + "-" + classifier + "." + configPackaging
+                unzip dir: configPath, zipFile: configFile
+            }
+        }
+    }
+	
+    stage('QA Variabilization') {
+        def pomfile = "/home/jenkins/pom-valorisation.xml"
+        
+		// le chemin du buildfile est le basedir pour les arguments de la tâche ant
+        def workspaceBasedir = "../"
+        def propertiesFilesPath = "installation/conf/"
+
+        // Variabilisation Postgresql
+		for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+
+            def configInput = outputDir + "/" + dbArtifactId + "-" + version + "-" + configPostgresClassifier
+            def configOutput = outputDir + "/" + dbArtifactId + "-" + version + "-" + configPostgresClassifier + "-" + propertiesFilename
+            
+            mvn " resources:copy-resources" +
+					" -f \"$pomfile\"" +
+                    " -Dinput=\"$WORKSPACE/$configInput\"" +
+	                " -Doutput=\"$WORKSPACE/$configOutput\"" +
+                    " -DpropertiesFile=\"$WORKSPACE/$propertiesFilesPath/$propertiesFile\""
+        }
+		
+		// Variabilisation Jboss-hc + SiteMinder
+		for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+
+            for (String classifier : configClassifiers) {
+                def configInput = outputDir + "/" + configArtifactId + "-" + version + "-" + classifier
+                def configOutput = outputDir + "/" + configArtifactId + "-" + version + "-" + classifier + "-" + propertiesFilename
+                
+				mvn " resources:copy-resources" +
+					" -f \"$pomfile\"" +
+                    " -Dinput=\"$WORKSPACE/$configInput\"" +
+	                " -Doutput=\"$WORKSPACE/$configOutput\"" +
+                    " -DpropertiesFile=\"$WORKSPACE/$propertiesFilesPath/$propertiesFile\""
+            }
+        }
+    }
+
+    stage('QA Packaging') {
+        for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+
+            // Packaging Postgresql
+            //for (String classifier : configClassifiers) {
+                dir(outputDir) {
+                    def configPath = dbArtifactId + "-" + version + "-" + configPostgresClassifier + "-" + propertiesFilename
+                    def configFile = dbArtifactId + "-" + version + "-" + configPostgresClassifier + "-" + propertiesFilename + "." + configPackaging
+                    zip dir: configPath, zipFile: configFile
+                }
+            //}
+			
+			// Packaging Jboss-hc + Jboss-cli + SiteMinder
+			for (String classifier : configClassifiers) {
+                dir(outputDir) {
+                    def configPath = configArtifactId + "-" + version + "-" + classifier + "-" + propertiesFilename
+                    def configFile = configArtifactId + "-" + version + "-" + classifier + "-" + propertiesFilename + "." + configPackaging
+                    zip dir: configPath, zipFile: configFile
+                }
+            }
+        }
+    }
+
+    stage('Deploy') {
+        def nexusRepositoryId = "rsi-nexus"
+        def nexusUrl = "http://10.92.193.76:8081/repository/rsi-qualification/"
+
+        for (String propertiesFile : propertiesFiles) {
+            def propertiesFilename = propertiesFile.take(propertiesFile.lastIndexOf('.'))
+
+            def dbArtifactIdToDeploy = dbArtifactId + "-" + propertiesFilename
+            def dbFile = outputDir + "/" + dbArtifactId + "-" + version + "-" + configPostgresClassifier + "-" + propertiesFilename + "." + configPackaging
+            mvn_deploy groupId, dbArtifactIdToDeploy, version, configPackaging, dbFile, nexusRepositoryId, nexusUrl, configPostgresClassifier
+            
+			for (String classifier : configClassifiers) {
+                def configArtifactIdToDeploy = configArtifactId + "-" + propertiesFilename
+                def configFile = outputDir + "/" + configArtifactId + "-" + version + "-" + classifier + "-" + propertiesFilename + "." + configPackaging
+                mvn_deploy groupId, configArtifactIdToDeploy, version, configPackaging, configFile, nexusRepositoryId, nexusUrl, classifier
+            }
+        }
+    }
+}
+
+/**
+ * Méthode pour utiliser maven avec une version de java et de maven spécifique.
+ * @param args les paramètres à donner à maven
+ * @return
+ */
+def mvn(args) {
+    withEnv([
+            "JAVA_HOME=${tool 'jdk1.8.0_121'}",
+            "M2_HOME=${tool 'maven-3.5.0'}",
+            "PATH+MAVEN=${tool 'maven-3.5.0'}/bin:${tool 'jdk1.8.0_121'}/bin"
+    ]) {
+        sh "mvn $args"
+    }
+}
+
+/**
+ * Méthode pour télécharger.
+ * @param user le nom de l'utilisateur.
+ * @param password le mot de passe.
+ * @param prefix le chemin de destination.
+ * @param file le chemin du fichier à télécharger.
+ * @return
+ */
+def mvn_download(groupId, artifactId, version, packaging, classifier, target) {
+    mvn "org.apache.maven.plugins:maven-dependency-plugin:3.0.0:purge-local-repository" +
+            " -DmanualInclude=\"" + groupId + "\":\"" + artifactId + "\":\"" + version + "\""
+    mvn "org.apache.maven.plugins:maven-dependency-plugin:3.0.0:copy" +
+            " -Dartifact=\"" + groupId + "\":\"" + artifactId + "\":\"" + version + "\":\"" + packaging + "\":\"" + classifier + "\"" +
+            " -DoutputDirectory=\"" + target + "\""
+}
+
+/**
+ * Méthode pour déployer.
+ * @param groupId l'id groupe de l'artefact.
+ * @param artifactId l'id de l'artefact.
+ * @param version la version de l'artefact.
+ * @param packaging le type de l'artefact.
+ * @param file le chemin vers l'artefact.
+ * @param repositoryId l'id à mapper sur la section server du settings.xml
+ * @param url l'adresse du repository où déployer.
+ * @param classifier le classifier de l'artefact.
+ * @return
+ */
+def mvn_deploy(groupId, artifactId, version, packaging, file, repositoryId, url, classifier) {
+    mvn "deploy:deploy-file" +
+            " -DgroupId=\"" + groupId + "\"" +
+            " -DartifactId=\"" + artifactId + "\"" +
+            " -Dversion=\"" + version + "\"" +
+            " -Dpackaging=\"" + packaging + "\"" +
+            " -Dfile=\"" + file + "\"" +
+            " -DrepositoryId=\"" + repositoryId + "\"" +
+            " -Durl=\"" + url + "\"" +
+            " -Dclassifier=\"" + classifier + "\"" +
+            " -DgeneratePom=false"
+}

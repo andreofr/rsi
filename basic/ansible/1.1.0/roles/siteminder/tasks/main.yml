@@ -1,0 +1,5 @@
+---
+# file: main.yml
+- include: download.yml
+- include: deploy.yml
+- include: install.yml

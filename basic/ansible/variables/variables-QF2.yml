@@ -1,0 +1,14 @@
+---
+env: "QF2"
+server_name: "BASICQF2"
+postgresql_base: b_basicqf2
+postgresql_schema: s_basicqf2
+postgresql_user: u_basicqf2
+postgresql_password: *******
+posgresql_appli: basic
+posgresql_env: qf2
+siteminder_user: siteminder
+siteminder_password: *******
+hc_user: basicqf2
+hc_conf_env : qf2
+

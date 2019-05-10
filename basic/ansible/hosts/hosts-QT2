@@ -1,0 +1,9 @@
+localhost ansible_connection=local
+
+postgresql ansible_host=10.132.20.45 ansible_user=postgres
+
+jboss_dc ansible_host=10.132.20.100 ansible_user=jboss
+
+jboss_hc ansible_host=10.132.20.101 ansible_user=basicqt2
+
+siteminder ansible_host=TRV960WINF117.ilc.eic.intra ansible_user=administrateur ansible_port=5985 ansible_password=P@ssw0rd ansible_connection=winrm ansible_winrm_server_cert_validation=ignore

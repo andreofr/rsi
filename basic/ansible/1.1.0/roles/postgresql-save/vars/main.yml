@@ -1,0 +1,9 @@
+---
+work_directory: "~/work"
+
+# download task
+#download_base_file: "basic-bdd-{{env}}-{{version}}-postgresql.zip"
+#download_base_url: "{{nexus_url}}/repository/rsi-qualification/fr/rsi/basic/basic-bdd-{{env}}/{{version}}/{{download_base_file}}"
+
+# deploy task
+#deploy_base_file: "basic-bdd-{{env}}-{{version}}-postgresql.zip"

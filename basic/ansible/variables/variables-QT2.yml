@@ -1,0 +1,13 @@
+---
+env: "QT2"
+server_name: "BASICQT2"
+postgresql_base: b_basicqt2
+postgresql_schema: s_basicqt2
+postgresql_user: u_basicqt2
+postgresql_password: *******
+posgresql_appli: basic
+posgresql_env: qt2
+siteminder_user: siteminder
+siteminder_password: *******
+hc_user: basicqt2
+hc_conf_env : qt2

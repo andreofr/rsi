@@ -1,0 +1,10 @@
+---
+work_directory: "~/work"
+
+# download task
+download_conf_file: "basic-config-{{env}}-{{version}}-jboss.zip"
+download_conf_url: "{{nexus_url}}/repository/rsi-qualification/fr/rsi/basic/basic-config-{{env}}/{{version}}/{{download_conf_file}}"
+
+# deploy task
+deploy_conf_file: "basic-config-{{env}}-{{version}}-jboss.zip"
+deploy_dest_directory: "/basic/{{hc_conf_env}}/conf"

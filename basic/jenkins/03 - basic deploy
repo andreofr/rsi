@@ -1,0 +1,81 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([booleanParam(defaultValue: false, description: 'Utiliser l\'inventaire du portailQI', name: 'queryHost'),
+                    string(defaultValue: '', description: 'La version à déployer sous la forme "X.Y.Z-LIVRAISON".', name: 'version'),
+                    string(defaultValue: '', description: 'L\'environnement sur lequel déployer (ex: QT1, QT2, QF1, QF2, etc..).', name: 'environment'),
+                    booleanParam(defaultValue: false, description: 'Sauvegarde la base de données.', name: 'save'),
+                    booleanParam(defaultValue: false, description: 'Déployer la base de données.', name: 'base'),
+                    booleanParam(defaultValue: false, description: 'Déployer la mise à jour de la base de données.', name: 'majbase'),
+                    booleanParam(defaultValue: false, description: 'Déployer les habilitations SiteMinder.', name: 'siteminder'),
+                    booleanParam(defaultValue: true, description: 'Déployer le web.', name: 'web')]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15')),
+        pipelineTriggers([])
+])
+
+if (params.version == "") {
+    echo "Parameter \"version\" is mandatory"
+    error "Parameter \"version\" is mandatory"
+}
+
+if (params.environment == "") {
+    echo "Parameter \"environment\" is mandatory"
+    error "Parameter \"environment\" is mandatory"
+}
+
+node {
+
+    def inventoryFilename = "host_BASIC_" + params.version + "_" + params.environment
+    def inventoryPath = ""
+
+    stage('query inventory') {
+        if (params.queryHost) {
+            // querying inventory
+            sh "cd /home/jenkins; /home/jenkins/launcher-portail-client.sh \"uri=http://localhost:8084/portail-api/servers?product=BASIC&version=${params.version}&environment=${params.environment}\" \"path=${env.WORKSPACE}\""
+
+            // displaying inventory
+            def content = readFile inventoryFilename
+            echo content
+
+            // copying inventory
+            def user = "ansible"
+            def host = "10.92.193.78"
+            def destination = "~/playbooks/basic/hosts-generated"
+            sh "scp -p \"${env.WORKSPACE}/$inventoryFilename\" $user@$host:\"$destination\""
+            inventoryPath = destination + "/" + inventoryFilename
+        } else {
+            echo "Using default inventory from Ansible."
+        }
+    }
+
+    stage('deploy save') {
+        if (params.save) {
+            sh "ssh ansible@10.92.193.78 \"cd /home/ansible/playbooks/basic; /home/ansible/playbooks/basic/basic-postgresql-save.sh $params.version $params.environment $inventoryPath \""
+        }
+    }
+
+    stage('deploy base') {
+        if (params.base) {
+            sh "ssh ansible@10.92.193.78 \"cd /home/ansible/playbooks/basic; /home/ansible/playbooks/basic/basic-postgresql.sh $params.version $params.environment $inventoryPath \""
+        }
+    }
+    
+    stage('deploy majbase') {
+        if (params.majbase) {
+            sh "ssh ansible@10.92.193.78 \"cd /home/ansible/playbooks/basic; /home/ansible/playbooks/basic/basic-postgresql-majbase.sh $params.version $params.environment $inventoryPath \""
+        }
+    }
+
+    stage('deploy siteminder') {
+        if (params.siteminder) {
+            sh "ssh ansible@10.92.193.78 \"cd /home/ansible/playbooks/basic; /home/ansible/playbooks/basic/basic-siteminder.sh $params.version $params.environment $inventoryPath \""
+        }
+    }
+
+    stage('deploy web') {
+        if (params.web) {
+            sh "ssh ansible@10.92.193.78 \"cd /home/ansible/playbooks/basic; /home/ansible/playbooks/basic/basic-web.sh $params.version $params.environment $inventoryPath \""
+        }
+    }
+
+}
