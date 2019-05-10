@@ -1,0 +1,31 @@
+---
+# file: main.yml
+
+# initialise working directory
+- name: "Create directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: directory
+
+# download files
+- name: "Include download tasks"
+  include_tasks: download.yml
+  with_items:
+    - "{{ batchs }}"
+  loop_control:
+    loop_var: batch
+
+# deploy files
+- name: "Include deploy tasks"
+  include_tasks: deploy.yml
+  with_items:
+    - "{{ batchs }}"
+  loop_control:
+    loop_var: batch
+
+# cleaning working directory
+- name: "Delete working directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: absent
+...

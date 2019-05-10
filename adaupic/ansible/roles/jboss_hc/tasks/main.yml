@@ -1,0 +1,5 @@
+---
+# file: main.yml
+- import_tasks: download.yml
+- import_tasks: deploy.yml
+...

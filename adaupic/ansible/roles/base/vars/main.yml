@@ -1,0 +1,11 @@
+---
+work_directory: "~/work"
+version_directory: "~/{{ version }}"
+version_tma: "{{ version | regex_search(version_tma_regex) }}"
+
+sql_tma_file: "da-config-{{ version_tma }}-sql.zip"
+sql_tma_url: "{{ nexus_application_repository }}/fr/rsi/da/distribution/da-config/{{ version_tma }}/{{ sql_tma_file }}"
+
+sql_dqi_file: "da-config-{{ env }}-{{ version }}-sql.zip"
+sql_dqi_url: "{{ nexus_valorisation_repository }}/fr/rsi/da/distribution/da-config-{{ env }}/{{ version }}/{{ sql_dqi_file }}"
+...

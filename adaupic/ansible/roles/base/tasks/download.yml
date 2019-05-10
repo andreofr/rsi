@@ -1,0 +1,17 @@
+---
+# sql : tma
+- name: "Get sql tma files from nexus"
+  get_url:
+    url: "{{ sql_tma_url }}"
+    url_username: "{{ nexus_login }}"
+    url_password: "{{ nexus_password }}"
+    dest: "{{ work_directory }}"
+
+# sql : dqi
+- name: "Get sql dqi files from nexus"
+  get_url:
+    url: "{{ sql_dqi_url }}"
+    url_username: "{{ nexus_login }}"
+    url_password: "{{ nexus_password }}"
+    dest: "{{ work_directory }}"
+...

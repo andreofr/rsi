@@ -1,0 +1,41 @@
+---
+# file: main.yml
+
+# initialise working directory
+- name: "Create directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: directory
+
+# register batchs directories stat
+- name: "Check batchs directories : {{ version_directory }}"
+  stat:
+    path: "{{ version_directory }}/{{ item.name }}"
+  register: version_directory_stat
+  with_items:
+    - "{{ batchs }}"
+
+# download files
+- name: "Include download tasks"
+  include_tasks: download.yml
+  vars:
+    batch: "{{ item.item }}"
+  with_items:
+    - "{{ version_directory_stat.results }}"
+  when: item.stat.exists == false
+
+# deploy files
+- name: "Include deploy tasks"
+  include_tasks: deploy.yml
+  vars:
+    batch: "{{ item.item }}"
+  with_items:
+    - "{{ version_directory_stat.results }}"
+  when: item.stat.exists == false
+
+# clean working directory
+- name: "Delete working directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: absent
+...

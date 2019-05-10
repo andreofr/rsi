@@ -1,0 +1,32 @@
+---
+work_directory: "~/work"
+version_directory: "~/{{ version }}"
+batch_name_template: "batch-name-template"
+version_tma: "{{ version | regex_search(version_tma_regex) }}"
+
+# list of batchs
+batchs:
+  - { name: "da-batch-integration-acoss", script: true }
+  - { name: "da-batch-integration-scr", script: true }
+  - { name: "da-batch-appariement-enrichissement", script: true }
+  - { name: "da-batch-calcul-cotisations", script: true }
+  - { name: "da-batch-expor-scr", script: true }
+  - { name: "da-batch-acq-acoss", script: true }
+  - { name: "da-batch-acq-scr", script: true }
+  - { name: "da-batch-controle-exhaustivite", script: true }
+  - { name: "da-batch-expor-anomalies-scr", script: true }
+  - { name: "da-batch-indicateurs-reprise", script: true }
+  - { name: "da-batch-regionalisation", script: true }
+  - { name: "da-batch-test", script: false }
+
+# download task
+batch_file: "{{ batch_name_template }}-{{ version_tma }}-shaded.jar"
+batch_url: "{{ nexus_application_repository }}/fr/rsi/da/distribution/{{ batch_name_template }}/{{ version_tma }}/{{ batch_file }}"
+batch_script_file: "da-config-{{ version_tma }}-script-{{ batch_name_template }}.zip"
+batch_script_url: "{{ nexus_application_repository }}/fr/rsi/da/distribution/da-config/{{ version_tma }}/{{ batch_script_file }}"
+
+# deploy task
+batch_bin_directory: "bin"
+batch_logs_directory: "logs"
+batch_script_directory: "script"
+...

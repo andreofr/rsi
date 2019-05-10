@@ -1,0 +1,72 @@
+#!/usr/bin/env groovy
+
+properties([
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15'))
+])
+
+node {
+    stage('Initializing parameters') {
+        // nettoie le workspace
+        sh "cd \"$WORKSPACE\" && rm -rf *"
+
+        product = "ADAU"
+        groupId = "fr.rsi.da.distribution"
+        version = env.BRANCH_NAME
+
+        // batch
+        def artifactIdBatch = "adau-batch"
+        // TODO : da-batch-integration-acoss
+        // TODO : da-batch-integration-scr
+        // TODO : da-batch-appariement-enrichissement
+        // TODO : da-batch-calcul-cotisations
+        // TODO : da-batch-expor-scr
+
+        // ear
+        def artifactIdEar = "adau-ear"
+        // TODO : da-ihm-ear
+
+        // configurations TMA
+        def artifactIdConfig = "adau-config"
+        // TODO
+
+        outputDir = "tmp"
+    }
+
+    stage('Download from DQI') {
+        // récupération des batchs
+        // TODO : da-batch-integration-acoss
+        // TODO : da-batch-integration-scr
+        // TODO : da-batch-appariement-enrichissement
+        // TODO : da-batch-calcul-cotisations
+        // TODO : da-batch-expor-scr
+
+        // récupération de l'ear
+        // TODO : da-ihm-ear
+
+        // récupération des fichiers de configuration TMA
+        // TODO
+    }
+
+    stage('Upload to DPE') {
+        // mise à disposition des batchs
+        // TODO : da-batch-integration-acoss
+        // TODO : da-batch-integration-scr
+        // TODO : da-batch-appariement-enrichissement
+        // TODO : da-batch-calcul-cotisations
+        // TODO : da-batch-expor-scr
+
+        // mise à disposition de l'ear
+        // TODO : da-ihm-ear
+
+        // mise à disposition des fichiers de configuration TMA
+        // TODO
+    }
+
+    stage('Send notification') {
+        // mailToDPE([
+        //         product: product,
+        //         version: version,
+        // ])
+    }
+
+}

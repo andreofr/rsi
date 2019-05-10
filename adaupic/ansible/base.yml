@@ -1,0 +1,7 @@
+---
+# file: base.yml
+- hosts: base
+  gather_facts: false
+  roles:
+    - base
+...

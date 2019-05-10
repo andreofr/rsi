@@ -1,0 +1,6 @@
+---
+# file: site.yml
+- include: base.yml
+- include: batch.yml
+- include: ear.yml
+...

@@ -1,0 +1,25 @@
+---
+work_directory: "~/work"
+batch_name_template: "batch-name-template"
+
+# list of batchs
+batchs:
+  - { name: "da-batch-integration-acoss", config: true }
+  - { name: "da-batch-integration-scr", config: true }
+  - { name: "da-batch-appariement-enrichissement", config: true }
+  - { name: "da-batch-calcul-cotisations", config: true }
+  - { name: "da-batch-expor-scr", config: true }
+  - { name: "da-batch-acq-acoss", config: true }
+  - { name: "da-batch-acq-scr", config: true }
+  - { name: "da-batch-controle-exhaustivite", config: true }
+  - { name: "da-batch-expor-anomalies-scr", config: true }
+  - { name: "da-batch-indicateurs-reprise", config: true }
+  - { name: "da-batch-regionalisation", config: true }
+  - { name: "da-batch-test", config: false }
+
+# download task
+batch_config_file: "da-config-{{ env }}-{{ version }}-{{ batch_name_template }}.zip"
+batch_config_url: "{{ nexus_valorisation_repository }}/fr/rsi/da/distribution/da-config-{{ env }}/{{ version }}/{{ batch_config_file }}"
+
+# deploy task
+...

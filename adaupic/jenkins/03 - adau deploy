@@ -1,0 +1,174 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([
+                string(defaultValue: '', description: 'L\'environnement sur lequel déployer (ex: QT, QF, QF1, etc..).', name: 'environment'),
+                booleanParam(defaultValue: true, description: 'Déployer les sqls.', name: 'base'),
+                booleanParam(defaultValue: true, description: 'Déployer les batchs.', name: 'batch'),
+                booleanParam(defaultValue: true, description: 'Déployer les ears.', name: 'ear')
+        ]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15'))
+])
+
+if (params.environment == "") {
+    echo "Parameter \"environment\" is mandatory"
+    error "Parameter \"environment\" is mandatory"
+}
+
+node {
+
+    stage('Initializing parameters') {
+        // nettoie le workspace
+        sh "rm -rf \"$WORKSPACE\"/*"
+
+        product = "adau"
+        propertiesFilesPath = "pic/valorisation/"
+
+        groupId = "fr.rsi.da.distribution"
+
+        artifactIdTma = "adau-config"
+        versionTma = utils.getTmaVersion(env.BRANCH_NAME)
+//        classifiersTma = ["batch-integration-acoss",
+//                          "batch-integration-scr",
+//                          "batch-appariement-enrichissement",
+//                          "batch-calcul-cotisations",
+//                          "batch-expor-scr",
+//                          "batch-acq-acoss",
+//                          "batch-acq-scr",
+//                          "batch-controle-exhaustivite",
+//                          "batch-expor-anomalies-scr",
+//                          "batch-expor-scr",
+//                          "batch-indicateurs-reprise",
+//                          "batch-regionalisation",
+//                          "batch-test"]
+        classifiersTma = []
+
+        artifactIdDqi = "adau-dqi-config"
+        versionDqi = env.BRANCH_NAME
+        classifiersDqi = []
+
+        outputDir = "tmp"
+    }
+
+    stage("Checkout properties file") {
+        checkout([$class                           : "GitSCM",
+                  branches                         : [[name: env.BRANCH_NAME]],
+                  doGenerateSubmoduleConfigurations: false,
+                  extensions                       : [[$class: "WipeWorkspace"],
+                                                      [$class: "SparseCheckoutPaths", sparseCheckoutPaths: [[path: propertiesFilesPath]]]],
+                  submoduleCfg                     : [],
+                  userRemoteConfigs                : [[credentialsId: "jenkins", url: "git@" + git.getServer() + ":cndssti/" + product + "dqi.git"]]])
+    }
+
+    stage('Download from Nexus') {
+        // récupération de la configuration TMA
+        configDownload([
+                groupId         : groupId,
+                artifactId      : artifactIdTma,
+                version         : versionTma,
+                classifiers     : classifiersTma,
+                workingDirectory: outputDir
+        ])
+
+        // récupération de la configuration DQI
+        configDownload([
+                groupId         : groupId,
+                artifactId      : artifactIdDqi,
+                version         : versionDqi,
+                classifiers     : classifiersDqi,
+                workingDirectory: outputDir
+        ])
+    }
+
+    stage('Variabilization') {
+        // variabilisation de la configuration TMA pour l'environnement souhaité
+        configVariabilization([
+                artifactId         : artifactIdTma,
+                classifiers        : classifiersTma,
+                environment        : params.environment,
+                propertiesFilesPath: propertiesFilesPath,
+                workingDirectory   : outputDir
+        ])
+
+        // variabilisation de la configuration DQI pour l'environnement souhaité
+        configVariabilization([
+                artifactId         : artifactIdDqi,
+                classifiers        : classifiersDqi,
+                environment        : params.environment,
+                propertiesFilesPath: propertiesFilesPath,
+                workingDirectory   : outputDir
+        ])
+    }
+
+    stage("Packaging") {
+        // packaging de la configuration TMA
+        configPackage([
+                artifactId      : artifactIdTma,
+                classifiers     : classifiersTma,
+                environment     : params.environment,
+                workingDirectory: outputDir
+        ])
+
+        // packaging de la configuration DQI
+        configPackage([
+                artifactId      : artifactIdDqi,
+                classifiers     : classifiersDqi,
+                environment     : params.environment,
+                workingDirectory: outputDir
+        ])
+    }
+
+    stage('Upload to Nexus') {
+        // remonté de la configuration Tma
+        // avec la version DQI (x.y.z-nnn-m)
+        configDeploy([
+                groupId         : groupId,
+                artifactId      : artifactIdTma,
+                version         : versionDqi,
+                classifiers     : classifiersTma,
+                environment     : params.environment,
+                workingDirectory: outputDir
+        ])
+
+        // remonté de la configuration Tma
+        configDeploy([
+                groupId         : groupId,
+                artifactId      : artifactIdDqi,
+                version         : versionDqi,
+                classifiers     : classifiersDqi,
+                environment     : params.environment,
+                workingDirectory: outputDir
+        ])
+    }
+
+    stage('Deploy base') {
+        if (params.base) {
+            ansible([
+                    path      : "/home/ansible/playbooks",
+                    script    : "launcher.sh",
+                    scriptArgs: "${product} base ${versionDqi} ${params.environment}"
+            ])
+        }
+    }
+
+    stage('Deploy batch') {
+        if (params.batch) {
+            ansible([
+                    path      : "/home/ansible/playbooks",
+                    script    : "launcher.sh",
+                    scriptArgs: "${product} batch ${versionDqi} ${params.environment}"
+            ])
+        }
+    }
+
+    stage('Deploy ear') {
+        if (params.ear) {
+            ansible([
+                    path      : "/home/ansible/playbooks",
+                    script    : "launcher.sh",
+                    scriptArgs: "${product} ear ${versionDqi} ${params.environment}"
+            ])
+        }
+    }
+
+}

@@ -1,0 +1,10 @@
+---
+# batch : config
+- name: "Get config file from nexus for batch : {{ batch.name }}"
+  get_url:
+    url: "{{ batch_config_url | regex_replace(batch_name_template, batch.name) }}"
+    url_username: "{{ nexus_login }}"
+    url_password: "{{ nexus_password }}"
+    dest: "{{ work_directory }}"
+  when: batch.config
+...

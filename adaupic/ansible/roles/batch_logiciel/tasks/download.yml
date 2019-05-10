@@ -1,0 +1,18 @@
+---
+# batch : jar
+- name: "Get jar file from nexus for batch : {{ batch.name }}"
+  get_url:
+    url: "{{ batch_url | regex_replace(batch_name_template, batch.name) }}"
+    url_username: "{{ nexus_login }}"
+    url_password: "{{ nexus_password }}"
+    dest: "{{ work_directory }}"
+
+# batch : script
+- name: "Get script file from nexus for batch : {{ batch.name }}"
+  get_url:
+    url: "{{ batch_script_url | regex_replace(batch_name_template, batch.name) }}"
+    url_username: "{{ nexus_login }}"
+    url_password: "{{ nexus_password }}"
+    dest: "{{ work_directory }}"
+  when: batch.script
+...

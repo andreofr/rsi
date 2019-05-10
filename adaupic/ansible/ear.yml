@@ -1,0 +1,12 @@
+---
+# file: ear.yml
+- hosts: jboss_hc
+  gather_facts: false
+  roles:
+    - jboss_hc
+
+- hosts: jboss_dc
+  gather_facts: false
+  roles:
+    - jboss_dc
+...

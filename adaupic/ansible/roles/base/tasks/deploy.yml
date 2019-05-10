@@ -1,0 +1,26 @@
+---
+# sql : directory
+- name: "Create directory : {{ version_directory }}/sql"
+  file:
+    path: "{{ version_directory }}/sql"
+    state: directory
+
+# sql : dqi
+- name: "Copy sql dqi files"
+  unarchive:
+    src: "{{ work_directory }}/{{ sql_dqi_file }}"
+    dest: "{{ version_directory }}/sql/"
+    remote_src: yes
+
+- name: "Warning"
+  debug:
+    msg: "[WARNING] : if a file exists both in \"{{ sql_dqi_file}}\" and \"{{ sql_tma_file}}\" it will be overrided by the one in \"{{ sql_tma_file}}\""
+
+# sql : tma
+- name: "Copy sql tma files"
+  unarchive:
+    src: "{{ work_directory }}/{{ sql_tma_file }}"
+    dest: "{{ version_directory }}/sql/"
+    remote_src: yes
+
+...

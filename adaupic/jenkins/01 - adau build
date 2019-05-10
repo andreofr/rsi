@@ -1,0 +1,215 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([string(defaultValue: '', description: 'Chemin où se trouve les sources à compiler.', name: 'source')]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15'))
+])
+
+if (params.source == "") {
+    echo "Parameter \"source\" is mandatory"
+    error "Parameter \"source\" is mandatory"
+}
+
+node {
+
+    stage('Checkout') {
+        // nettoie le workspace
+        sh "cd \"$WORKSPACE\" && rm -rf *"
+
+        // copie des sources dans le workspace
+        sh "cp -r \"${params.source}\"/* \"$WORKSPACE\""
+    }
+
+    stage('Initializing parameters') {
+        // récupération de la version
+        pom = "Sources/da-parent/pom.xml"
+        def pomDefinition = readMavenPom file: pom
+        version = pomDefinition.version
+
+        // vérification de la version TMA
+        utils.matchTmaVersionPattern(version)
+        // vérification que la version TMA corresponde à la version de la branche
+        utils.matchVersion(version, utils.getTmaVersion(env.BRANCH_NAME))
+
+        outputDir = "tmp"
+    }
+
+    stage('Build') {
+        // compilation du product avec des versions spécifiques de Maven et Java.
+        maven([java_tool : "jdk1.6.0_41",
+               maven_tool: "maven-3.0.5",
+               args      : "clean install --file \"" + pom + "\""
+        ])
+    }
+
+    stage('Packaging') {
+        // TODO
+    }
+
+    stage('Upload to Nexus') {
+        def groupId = "fr.rsi.da.distribution"
+
+        // batch
+        // da-batch-integration-acoss
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-integration-acoss",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-integration-acoss/target/da-batch-integration-acoss-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-integration-scr
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-integration-scr",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-integration-scr/target/da-batch-integration-scr-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-appariement-enrichissement
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-appariement-enrichissement",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-appariement-enrichissement/target/da-batch-appariement-enrichissement-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-calcul-cotisations
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-calcul-cotisations",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-calcul-cotisations/target/da-batch-calcul-cotisations-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-expor-scr
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-expor-scr",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-expor-scr/target/da-batch-expor-scr-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-acq-acoss
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-acq-acoss",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-acq-acoss/target/da-batch-acq-acoss-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-acq-scr
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-acq-scr",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-acq-scr/target/da-batch-acq-scr-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-controle-exhaustivite
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-controle-exhaustivite",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-controle-exhaustivite/target/da-batch-controle-exhaustivite-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-expor-anomalies-scr
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-expor-anomalies-scr",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-expor-anomalies-scr/target/da-batch-expor-anomalies-scr-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-indicateurs-reprise
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-indicateurs-reprise",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-indicateurs-reprise/target/da-batch-indicateurs-reprise-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-regionalisation
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-regionalisation",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-regionalisation/target/da-batch-regionalisation-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // da-batch-test
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-batch-test",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-batch-parent/da-batch-test/target/da-batch-test-" + version + "-shaded.jar",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : "shaded"
+        ])
+
+        // ear
+        // da-ihm-ear
+        mavenDeploy([
+                groupId     : groupId,
+                artifactId  : "da-ihm-ear",
+                version     : version,
+                packaging   : "jar",
+                file        : "Sources/da-parent/da-ihm-parent/da-ihm-ear/target/adau.ear",
+                repositoryId: maven.getNexusRepositoryId(),
+                url         : nexus.getApplicationRepositoryUrl(),
+                classifier  : ""
+        ])
+
+        // configurations TMA
+        def artifactIdConfig = "da-config"
+        // TODO
+    }
+
+}

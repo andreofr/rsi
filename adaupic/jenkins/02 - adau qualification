@@ -1,0 +1,53 @@
+#!/usr/bin/env groovy
+
+properties([
+        parameters([string(defaultValue: '', description: 'Chemin où se trouve les sources de qualification.', name: 'source')]),
+        buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '15'))
+])
+
+if (params.source == "") {
+    echo "Parameter \"source\" is mandatory"
+    error "Parameter \"source\" is mandatory"
+}
+
+node {
+
+    stage('Checkout') {
+        // nettoie le workspace
+        sh "cd \"$WORKSPACE\" && rm -rf *"
+
+        // copie des sources dans le workspace
+        sh "cp -r \"${params.source}\"/* \"$WORKSPACE\""
+    }
+
+    stage('Initializing parameters') {
+        // récupération de la version
+        version = readFile("version.txt").trim()
+
+        // vérification de la version DQI
+        utils.matchDqiVersionPattern(version)
+        // vérification de la version de la branche
+        utils.matchDqiVersionPattern(env.BRANCH_NAME)
+        // vérification que la version DQI et la version de la branche sont identiques
+        utils.matchVersion(version, env.BRANCH_NAME)
+
+        outputDir = "tmp"
+    }
+
+    stage('Packaging') {
+        // TODO
+    }
+
+    stage('Upload to Nexus') {
+        def groupId = "fr.rsi.da.distribution"
+
+        // artefacts QDI
+        def artifactIdDqi = "da-dqi"
+        // TODO
+
+        // configurations DQI
+        def artifactIdDqiConfig = "da-dqi-config"
+        // TODO
+    }
+
+}

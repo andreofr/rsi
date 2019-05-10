@@ -1,0 +1,12 @@
+---
+# file: batch.yml
+- hosts: batch_logiciel
+  gather_facts: false
+  roles:
+    - batch_logiciel
+
+- hosts: batch_vcur
+  gather_facts: false
+  roles:
+    - batch_vcur
+...

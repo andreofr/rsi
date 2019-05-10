@@ -1,0 +1,29 @@
+---
+# file: main.yml
+
+# initialise working directory
+- name: "Create directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: directory
+
+# register sql directory stat
+- name: "Check sql directory : {{ version_directory }}/sql"
+  stat:
+    path: "{{ version_directory }}/sql"
+  register: version_directory_stat
+
+# download and deploy files
+- block:
+  - name: "Include download tasks"
+    include_tasks: download.yml
+  - name: "Include deploy tasks"
+    include_tasks: deploy.yml
+  when: version_directory_stat.stat.exists == false
+
+# clean working directory
+- name: "Delete working directory : {{ work_directory }}"
+  file:
+    path: "{{ work_directory }}"
+    state: absent
+...
